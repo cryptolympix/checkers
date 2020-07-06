@@ -109,13 +109,36 @@ function mouseReleased() {
 
 function movePiece(piece, i, j) {
   let moves = getAvailableMoves(piece);
-  let isAvailableMove = moves.some((m) => m.i == i && m.j == j);
-  if (isAvailableMove) {
-    board[piece.i][piece.j] = null;
-    board[i][j] = piece;
-    piece.i = i;
-    piece.j = j;
+  // Check if the square pressed is an available move
+  for (let move of moves) {
+    if (move.i === i && move.j === j) {
+      // Update the board
+      board[piece.i][piece.j] = null;
+      board[i][j] = piece;
+
+      // Update the data of the piece
+      piece.i = i;
+      piece.j = j;
+
+      // Remove the jumped pieces from the moves
+      while (move && move.jumped) {
+        removePiece(move.jumped);
+        move = move.prevMove;
+      }
+      break;
+    }
   }
+}
+
+function removePiece(p) {
+  // Remove the piece from the array of pieces
+  for (let i = 0; i < pieces.length; i++) {
+    if (pieces[i].i === p.i && pieces[i].j === p.j) {
+      pieces.splice(i, 1);
+      break;
+    }
+  }
+  board[p.i][p.j] = null;
 }
 
 function getAvailableMoves(piece) {
@@ -161,7 +184,7 @@ function getJumpMoves(piece) {
   }
 
   // Recursive function to search the jumping moves
-  function searchMoves(col, row, weight) {
+  function searchMoves(col, row, weight, prevMove) {
     // Get the next black squares
     for (let j = row - 1; j <= row + 1; j += 2) {
       for (let i = col - 1; i <= col + 1; i += 2) {
@@ -174,13 +197,21 @@ function getJumpMoves(piece) {
             let dj = j - row;
             let destCol = col + 2 * di;
             let destRow = row + 2 * dj;
+            let jumpedPiece = board[i][j];
             // The destination square must be on the board
             if (isOnTheBoard(destCol, destRow)) {
               // If the destination square is empty and does not have been visited yet
               // (prevent to get the moves twice in the array of moves)
               if (!board[destCol][destRow] && !isAlreadyVisited(destCol, destRow)) {
-                moves.push({ i: destCol, j: destRow, weight: weight + 1 });
-                searchMoves(destCol, destRow, weight + 1);
+                let move = {
+                  i: destCol,
+                  j: destRow,
+                  weight: weight + 1,
+                  jumped: jumpedPiece,
+                  prevMove,
+                };
+                moves.push(move);
+                searchMoves(destCol, destRow, weight + 1, move);
               }
             }
           }
