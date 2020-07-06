@@ -1,5 +1,3 @@
-let CANVAS_WIDTH = 1200;
-let CANVAS_HEIGHT = 1000;
 let BOARD_DIM = 800;
 
 let board;
@@ -20,26 +18,84 @@ function draw() {
 }
 
 function mouseReleased() {
-  if (mouseX < 0 || mouseX > BOARD_DIM || mouseY < 0 || mouseY > BOARD_DIM) return;
+  if (mouseX < 0 || mouseX > board.pixelDim || mouseY < 0 || mouseY > board.pixelDim)
+    return;
+
+  function findMove(toCol, toRow, moves) {
+    for (let move of moves) {
+      if (move.to.col === toCol && move.to.row === toRow) {
+        return move;
+      }
+    }
+  }
+
+  /**
+   * Check if the moves contain at least one jumping move
+   * @param {Array<Move>} moves - An array of moves
+   */
+  function containsJumpingMove(moves) {
+    for (let move of moves) {
+      if (move.isJumpingMove()) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Return true if the player can play a jumping move
+   */
+  function canPlayJumpingMove(player) {
+    let moves = [];
+    for (let piece of board.getAllPieces()) {
+      if (piece.player === player) {
+        moves = moves.concat(piece.getAvailableMoves());
+      }
+    }
+    return containsJumpingMove(moves);
+  }
 
   if (currentPlayer === players.HUMAN) {
     let i = floor(mouseX / board.squareDim);
     let j = floor(mouseY / board.squareDim);
-    // If we don't have selected a piece to move
-    if (!pieceSelected && board.hasPiece(i, j)) {
-      pieceSelected = board.getPiece(i, j);
+
+    if (board.hasPiece(i, j)) {
+      // If we don't have selected a piece to move
+      if (!pieceSelected) {
+        pieceSelected = board.getPiece(i, j);
+      }
+      // If we change the selected piece to move
+      else {
+        let piece = board.getPiece(i, j);
+        let player = piece.player;
+        if (player === players.HUMAN) {
+          pieceSelected = board.getPiece(i, j);
+        } else {
+          pieceSelected = null;
+        }
+      }
     }
     // If we have selected a piece and press on a free case
-    if (pieceSelected && !board.hasPiece(i, j)) {
-      board.movePiece(pieceSelected, i, j);
-      pieceSelected = null;
-    }
-    // If we change the selected piece to move
-    if (pieceSelected && board.hasPiece(i, j)) {
-      let piece = board.getPiece(i, j);
-      let player = piece.player;
-      if (player === players.HUMAN) {
-        pieceSelected = board.getPiece(i, j);
+    else if (pieceSelected) {
+      let moves = pieceSelected.getAvailableMoves();
+      let wishedMove = findMove(i, j, moves);
+
+      if (!wishedMove) {
+        pieceSelected = null;
+        return;
+      }
+
+      if (wishedMove.isJumpingMove()) {
+        board.movePiece(pieceSelected, i, j);
+        pieceSelected = null;
+      } else {
+        // If the player wants to play a basic move but a jumping move
+        // is available, he must plays it instead of the basic one.
+        if (canPlayJumpingMove(players.HUMAN)) {
+          // Display that a jumping move is required
+          console.log('You must plays the jumping move !');
+        } else {
+          board.movePiece(pieceSelected, i, j);
+          pieceSelected = null;
+        }
       }
     }
   }
