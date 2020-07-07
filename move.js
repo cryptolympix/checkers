@@ -51,4 +51,17 @@ class Move {
       return board.getPiece(this._from.col + dcol / 2, this._from.row + drow / 2);
     }
   }
+
+  isRequiredMove() {
+    for (let move of requiredMoves) {
+      if (
+        move.from.col === this._from.col &&
+        move.from.row === this._from.row &&
+        move.to.col === this._to.col &&
+        move.to.row === this._to.row
+      )
+        return true;
+    }
+    return false;
+  }
 }

@@ -22,11 +22,11 @@ class Piece {
       rect(this._col * dim, this._row * dim, dim, dim);
 
       // To debug the moves
-      let moves = this.getAvailableMoves();
-      for (let move of moves) {
-        fill('green');
-        rect(move.to.col * dim, move.to.row * dim, dim, dim);
-      }
+      // let moves = this.getAvailableMoves();
+      // for (let move of moves) {
+      //   fill('green');
+      //   rect(move.to.col * dim, move.to.row * dim, dim, dim);
+      // }
     }
   }
 
