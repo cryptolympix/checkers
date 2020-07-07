@@ -1,5 +1,7 @@
 let BOARD_DIM = 800;
 
+let kingImg;
+
 let board;
 let pieces = []; // The current pieces in the board
 let players = { HUMAN: 'human', AI: 'ai' };
@@ -8,9 +10,13 @@ let currentPlayer;
 let pieceSelected = null;
 let requiredMoves = [];
 
+function preload() {
+  kingImg = loadImage('assets/crown.png');
+}
+
 function setup() {
   createCanvas(BOARD_DIM, BOARD_DIM);
-  board = new Board(BOARD_DIM, 8);
+  board = new Board(BOARD_DIM, 10);
   currentPlayer = players.HUMAN;
 }
 

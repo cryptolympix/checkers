@@ -27,13 +27,13 @@ class Board {
         // Only on the black cases
         if (i % 2 === j % 2) {
           // AI at the top
-          if (j < 3) {
+          if (j < 4) {
             let p = new Piece(i, j, players.AI);
             this._pieces.push(p);
             this._tab[i][j] = p;
           }
           // Player at the bottom
-          if (j > this._numCol - 4) {
+          if (j > this._numCol - 5) {
             let p = new Piece(i, j, players.HUMAN);
             this._pieces.push(p);
             this._tab[i][j] = p;
@@ -72,7 +72,11 @@ class Board {
    * @param {Number} row - The row to get the piece
    */
   getPiece(col, row) {
-    return this._tab[col][row];
+    if (this.contains(col, row)) {
+      return this._tab[col][row];
+    } else {
+      return undefined;
+    }
   }
 
   /**
@@ -81,7 +85,11 @@ class Board {
    * @param {Number} row - The row of the square
    */
   hasPiece(col, row) {
-    return this._tab[col][row] !== null && this._tab[col][row] !== undefined;
+    if (this.contains(col, row)) {
+      return this._tab[col][row] !== null && this._tab[col][row] !== undefined;
+    } else {
+      return false;
+    }
   }
 
   /**
@@ -103,9 +111,14 @@ class Board {
         piece.col = toCol;
         piece.row = toRow;
 
+        // If the piece go to the opponent king row, it becomes king
+        if (this.isKingRow(toRow, piece.player)) {
+          piece.isKing = true;
+        }
+
         // Remove the jumped pieces from the moves
         while (move && move.isJumpingMove()) {
-          this.removePiece(move.getJumpedPiece());
+          this.removePiece(move.jumpedPiece);
           move = move.prevMove;
         }
         break;
@@ -134,6 +147,19 @@ class Board {
    */
   contains(col, row) {
     return col >= 0 && col < this._numCol && row >= 0 && row < this._numCol;
+  }
+
+  /**
+   * Check if the given row if the king row for the player
+   * @param {Number} row - The row to check
+   * @param {String} player - A player
+   */
+  isKingRow(row, player) {
+    if (player === players.HUMAN) {
+      return row === 0;
+    } else {
+      return row === board.numCol - 1;
+    }
   }
 
   get pixelDim() {
