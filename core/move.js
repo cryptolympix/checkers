@@ -25,7 +25,7 @@ class Move {
   }
 
   get from() {
-    return this.from;
+    return this._from;
   }
 
   set from(from) {

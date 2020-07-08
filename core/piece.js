@@ -23,10 +23,18 @@ class Piece {
       rect(this._col * dim, this._row * dim, dim, dim);
 
       // To debug the moves
-      let moves = this.getAvailableMoves();
-      for (let move of moves) {
-        fill('green');
-        rect(move.to.col * dim, move.to.row * dim, dim, dim);
+      if (DEBUG) {
+        let moves = this.getAvailableMoves();
+        for (let move of moves) {
+          fill('green');
+          rect(move.to.col * dim, move.to.row * dim, dim, dim);
+
+          fill('white');
+          textFont('Roboto');
+          textSize(18);
+          textAlign(CENTER);
+          text(move.weight, move.to.col * dim + dim / 2, move.to.row * dim + dim / 2);
+        }
       }
     }
 
@@ -39,23 +47,25 @@ class Piece {
 
   /**
    * Get all the possible moves from the piece
+   * @param {Board} b - A board (by default the displayed board)
    */
-  getAvailableMoves() {
+  getAvailableMoves(b = board) {
     if (!this._isKing) {
-      let basicMoves = this.getBasicMoves();
-      let jumpMoves = this.getJumpMoves();
+      let basicMoves = this.getBasicMoves(b);
+      let jumpMoves = this.getJumpMoves(b);
       return basicMoves.concat(jumpMoves);
     } else {
-      let basicMoves = this.getKingBasicMoves();
-      let jumpMoves = this.getKingJumpMoves();
+      let basicMoves = this.getKingBasicMoves(b);
+      let jumpMoves = this.getKingJumpMoves(b);
       return basicMoves.concat(jumpMoves);
     }
   }
 
   /**
    * Get the moves to a next dark square
+   * @param {Board} b - A board  (by default the displayed board)
    */
-  getBasicMoves() {
+  getBasicMoves(b = board) {
     let moves = [];
     let col = this._col;
     let row = this._row;
@@ -76,13 +86,15 @@ class Piece {
     for (let t of translations) {
       if (
         col + t.col >= 0 &&
-        col + t.col < board.numCol &&
+        col + t.col < b.numCol &&
         row + t.row >= 0 &&
-        row + t.row < board.numCol &&
-        !board.hasPiece(col + t.col, row + t.row)
+        row + t.row < b.numCol &&
+        !b.hasPiece(col + t.col, row + t.row)
       ) {
         let to = { col: col + t.col, row: row + t.row };
-        let move = new Move(from, to, 0, null, null);
+        // We add an important weight to the move if this move allows the piece to become a king
+        let weight = b.isKingRow(row + t.row, this._player) && !this._isKing ? 10 : 0;
+        let move = new Move(from, to, weight, null, null);
         moves.push(move);
       }
     }
@@ -92,8 +104,9 @@ class Piece {
 
   /**
    * Get the moves jumping other opponent's pieces in every direction (recursive move)
+   * @param {Board} b - A board (by default the displayed board)
    */
-  getJumpMoves() {
+  getJumpMoves(b = board) {
     let moves = [];
     let instance = this;
     let directions = [
@@ -114,27 +127,30 @@ class Piece {
         let i = col + d.col;
         let j = row + d.row;
         // If the square is in the board
-        if (board.contains(i, j)) {
+        if (b.contains(i, j)) {
           // If the next square is not empty and the piece placed on
           // it belongs to the opponent
-          if (board.hasPiece(i, j) && board.getPiece(i, j).player !== instance._player) {
+          if (b.hasPiece(i, j) && b.getPiece(i, j).player !== instance._player) {
             let di = i - col;
             let dj = j - row;
             let destCol = col + 2 * di;
             let destRow = row + 2 * dj;
-            let jumpedPiece = board.getPiece(i, j);
+            let jumpedPiece = b.getPiece(i, j);
             // The destination square must be on the board
-            if (board.contains(destCol, destRow)) {
+            if (b.contains(destCol, destRow)) {
               // If the destination square is empty and does not have been visited yet
               // (prevent to get the moves twice in the array of moves)
-              if (
-                !board.hasPiece(destCol, destRow) &&
-                !isAlreadyVisited(destCol, destRow)
-              ) {
+              if (!b.hasPiece(destCol, destRow) && !isAlreadyVisited(destCol, destRow)) {
+                // We add an important weight to the move if this move allows the piece to become a king,
+                // otherwise we just increment it
+                let moveWeight =
+                  b.isKingRow(destRow, instance._player) && !instance._isKing
+                    ? weight + 10
+                    : weight + 1;
                 let move = new Move(
-                  { col, row }, // from
+                  { col: instance._col, row: instance._row }, // from
                   { col: destCol, row: destRow }, // to
-                  weight + 1,
+                  moveWeight,
                   jumpedPiece,
                   prevMove
                 );
@@ -145,11 +161,6 @@ class Piece {
           }
         }
       }
-
-      // Get the next black squares
-      for (let j = row - 1; j <= row + 1; j += 2) {
-        for (let i = col - 1; i <= col + 1; i += 2) {}
-      }
     }
 
     searchMoves(this._col, this._row, 0, null);
@@ -158,8 +169,9 @@ class Piece {
 
   /**
    * Get the basic move for a king : on diagonals in every direction until another piece
+   * @param {Board} board - A board (by default the displayed board)
    */
-  getKingBasicMoves() {
+  getKingBasicMoves(b = board) {
     let moves = [];
     let directions = [
       { col: -1, row: -1 },
@@ -171,7 +183,7 @@ class Piece {
     for (let d of directions) {
       let col = this._col + d.col;
       let row = this._row + d.row;
-      while (board.contains(col, row) && !board.hasPiece(col, row)) {
+      while (b.contains(col, row) && !b.hasPiece(col, row)) {
         let move = new Move(
           { col: this._col, row: this._row },
           { col, row },
@@ -190,8 +202,9 @@ class Piece {
 
   /**
    * Get the jump move for a king : basic king move + jump move (recursive move)
+   * @param {Board} board - A board (by default the displayed board)
    */
-  getKingJumpMoves() {
+  getKingJumpMoves(b = board) {
     let moves = [];
     let instance = this;
     let directions = [
@@ -218,25 +231,25 @@ class Piece {
         // We slide until the farther square that could be reach by a basic move on the same diagonale
         let i = col + d.col;
         let j = row + d.row;
-        while (board.contains(i, j) && !board.hasPiece(i, j)) {
+        while (b.contains(i, j) && !b.hasPiece(i, j)) {
           slideSquares.push({ col: i, row: j });
           i += d.col;
           j += d.row;
         }
 
         // If the square is in the board
-        if (board.contains(i, j)) {
+        if (b.contains(i, j)) {
           // If the square is not empty and the piece placed on it belongs to the opponent
-          if (board.hasPiece(i, j) && board.getPiece(i, j).player !== instance._player) {
+          if (b.hasPiece(i, j) && b.getPiece(i, j).player !== instance._player) {
             let destCol = i + d.col;
             let destRow = j + d.row;
-            let jumpedPiece = board.getPiece(i, j);
+            let jumpedPiece = b.getPiece(i, j);
             // The destination square must be on the board
-            if (board.contains(destCol, destRow)) {
+            if (b.contains(destCol, destRow)) {
               // If the destination square is empty and does not have been visited yet
               // (prevent to get the moves twice in the array of moves)
               if (
-                !board.hasPiece(destCol, destRow) &&
+                !b.hasPiece(destCol, destRow) &&
                 !isAlreadyVisited(destCol, destRow) &&
                 !isSlideSquare(destCol, destRow)
               ) {

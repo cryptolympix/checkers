@@ -1,5 +1,7 @@
 let BOARD_DIM = 800;
 
+let DEBUG = true;
+
 let kingImg;
 
 let board;
@@ -51,27 +53,14 @@ function mouseReleased() {
   }
 
   /**
-   * Check if the moves contain at least one jumping move
-   * @param {Array<Move>} moves - An array of moves
-   */
-  function containsJumpingMove(moves) {
-    for (let move of moves) {
-      if (move.isJumpingMove()) return true;
-    }
-    return false;
-  }
-
-  /**
-   * Get the jumping moves from all the available moves
+   * Get the jumping moves for a player
    */
   function getJumpingMoves() {
     let result = [];
-    for (let piece of board.getAllPieces()) {
-      if (piece.player === players.HUMAN) {
-        let moves = piece.getAvailableMoves();
-        for (let move of moves) {
-          if (move.isJumpingMove()) result.push(move);
-        }
+    for (let piece of board.getAllPieces(players.HUMAN)) {
+      let moves = piece.getAvailableMoves();
+      for (let move of moves) {
+        if (move.isJumpingMove()) result.push(move);
       }
     }
     return result;
@@ -79,16 +68,9 @@ function mouseReleased() {
 
   /**
    * Return true if the player can play a jumping move
-   *
    */
   function canPlayJumpingMove() {
-    let moves = [];
-    for (let piece of board.getAllPieces()) {
-      if (piece.player === players.HUMAN) {
-        moves = moves.concat(piece.getAvailableMoves());
-      }
-    }
-    return containsJumpingMove(moves);
+    return getJumpingMoves().length > 0;
   }
 
   if (currentPlayer === players.HUMAN) {
@@ -100,7 +82,8 @@ function mouseReleased() {
     if (board.hasPiece(i, j)) {
       // If we don't have selected a piece to move
       if (!pieceSelected) {
-        pieceSelected = board.getPiece(i, j);
+        if (board.getPiece(i, j).player === players.HUMAN)
+          pieceSelected = board.getPiece(i, j);
       }
       // If we change the selected piece to move
       else {
@@ -125,10 +108,14 @@ function mouseReleased() {
       if (wishedMove.isJumpingMove()) {
         board.movePiece(pieceSelected, i, j);
         pieceSelected = null;
+        setTimeout(function () {
+          currentPlayer = players.AI;
+          AI();
+        }, 1000);
       } else {
         // If the player wants to play a basic move but a jumping move
         // is available, he must plays it instead of the basic one.
-        if (canPlayJumpingMove(players.HUMAN)) {
+        if (canPlayJumpingMove()) {
           // Add the jumping moves to the required moves
           for (let move of getJumpingMoves()) {
             if (move.isJumpingMove()) {
@@ -138,22 +125,35 @@ function mouseReleased() {
         } else {
           board.movePiece(pieceSelected, i, j);
           pieceSelected = null;
+          setTimeout(function () {
+            currentPlayer = players.AI;
+            AI();
+          }, 500);
         }
       }
     }
   }
 }
 
+function AI() {
+  if (currentPlayer === players.AI) {
+    let bestMove = getBestMove();
+    let pieceToMove = board.getPiece(bestMove.from.col, bestMove.from.row);
+    board.movePiece(pieceToMove, bestMove.to.col, bestMove.to.row);
+    currentPlayer = players.HUMAN;
+  }
+}
+
 function checkWinner() {
   let winner = null;
-  let pieceCount = [0, 0];
+  let piecePlayerCount = [0, 0];
 
   for (let p of board.getAllPieces()) {
-    if (p.player === players.HUMAN) pieceCount[0]++;
-    if (p.player === players.AI) pieceCount[1]++;
+    if (p.player === players.HUMAN) piecePlayerCount[0]++;
+    if (p.player === players.AI) piecePlayerCount[1]++;
   }
 
-  if (pieceCount[0] === 0) winner = players.AI;
-  if (pieceCount[1] === 0) winner = players.HUMAN;
+  if (piecePlayerCount[0] === 0) winner = players.AI;
+  if (piecePlayerCount[1] === 0) winner = players.HUMAN;
   return winner;
 }

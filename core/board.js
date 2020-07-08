@@ -27,16 +27,12 @@ class Board {
         // Only on the black cases
         if (i % 2 === j % 2) {
           // AI at the top
-          if (j < 4) {
-            let p = new Piece(i, j, players.AI);
-            this._pieces.push(p);
-            this._tab[i][j] = p;
+          if (j < this.numCol / 2 - floor(this.numCol / 15) - 1) {
+            this.addPiece(i, j, players.AI);
           }
           // Player at the bottom
-          if (j > this._numCol - 5) {
-            let p = new Piece(i, j, players.HUMAN);
-            this._pieces.push(p);
-            this._tab[i][j] = p;
+          if (j > this.numCol / 2 + floor(this.numCol / 15)) {
+            this.addPiece(i, j, players.HUMAN);
           }
         }
       }
@@ -60,10 +56,38 @@ class Board {
   }
 
   /**
-   * Get all the pieces on the board
+   * Get all the pieces on the board. If a player is specifying, return all
+   * the pieces of this player.
+   * @param {String} player - One of the player (human or ai)
    */
-  getAllPieces() {
-    return this._pieces;
+  getAllPieces(player) {
+    if (player) {
+      let result = [];
+      for (let piece of this._pieces) {
+        if (piece.player === player) {
+          result.push(piece);
+        }
+      }
+      return result;
+    } else {
+      return this._pieces;
+    }
+  }
+
+  /**
+   * Get the number of pieces
+   * @param {String} player - The player to count the pieces
+   */
+  getNumberOfPieces(player) {
+    let result = 0;
+    for (let piece of this._pieces) {
+      if (!player) {
+        result++;
+      } else {
+        if (piece.player === player) result++;
+      }
+    }
+    return result;
   }
 
   /**
@@ -111,7 +135,7 @@ class Board {
         piece.col = toCol;
         piece.row = toRow;
 
-        // If the piece go to the opponent king row, it becomes king
+        // If we add the piece on the opponent king row, it becomes a king
         if (this.isKingRow(toRow, piece.player)) {
           piece.isKing = true;
         }
@@ -127,6 +151,24 @@ class Board {
   }
 
   /**
+   * Add a piece on the board
+   * @param {Number} col - The colum where we add the piece
+   * @param {Number} row - The row where we add the piece
+   * @param {String} player - One of the player
+   */
+  addPiece(col, row, player) {
+    if (this.contains(col, row) && !this.hasPiece(col, row)) {
+      let piece = new Piece(col, row, player);
+      // If we add the piece on the opponent king row, it becomes a king
+      if (this.isKingRow(row, player)) {
+        piece.isKing = true;
+      }
+      this._pieces.push(piece);
+      this._tab[col][row] = piece;
+    }
+  }
+
+  /**
    * Remove a piece from the board and the array of pieces
    * @param {Piece} piece - The piece to remove
    */
@@ -138,6 +180,7 @@ class Board {
       }
     }
     this._tab[piece.col][piece.row] = null;
+    piece = null;
   }
 
   /**
@@ -158,7 +201,7 @@ class Board {
     if (player === players.HUMAN) {
       return row === 0;
     } else {
-      return row === board.numCol - 1;
+      return row === this._numCol - 1;
     }
   }
 
@@ -184,6 +227,14 @@ class Board {
 
   set squareDim(squareDim) {
     this._squareDim = squareDim;
+  }
+
+  get pieces() {
+    return this._pieces;
+  }
+
+  set pieces(pieces) {
+    this._pieces = pieces;
   }
 
   get tab() {
