@@ -3,6 +3,7 @@ let BOARD_DIM = 800;
 let DEBUG = true;
 
 let kingImg;
+let countView;
 
 let board;
 let pieces = []; // The current pieces in the board
@@ -17,6 +18,7 @@ function preload() {
 }
 
 function setup() {
+  countView = createP();
   createCanvas(BOARD_DIM, BOARD_DIM);
   board = new Board(BOARD_DIM, 10);
   currentPlayer = players.HUMAN;
@@ -24,6 +26,7 @@ function setup() {
 
 function draw() {
   background(255);
+  drawCountInfo();
   board.draw();
 
   // Display the required moves
@@ -32,6 +35,16 @@ function draw() {
     fill('orange');
     rect(move.to.col * dim, move.to.row * dim, dim, dim);
   }
+}
+
+function drawCountInfo() {
+  countView.html(
+    `Human : ${board.getNumberOfPieces(players.HUMAN)}<br/>AI : ${board.getNumberOfPieces(
+      players.AI
+    )}`
+  );
+  countView.style('font-family', 'Nunito');
+  countView.style('width', `${BOARD_DIM}px`);
 }
 
 function mouseReleased() {
@@ -111,7 +124,7 @@ function mouseReleased() {
         setTimeout(function () {
           currentPlayer = players.AI;
           AI();
-        }, 1000);
+        }, 500);
       } else {
         // If the player wants to play a basic move but a jumping move
         // is available, he must plays it instead of the basic one.
@@ -136,11 +149,31 @@ function mouseReleased() {
 }
 
 function AI() {
+  /**
+   * Check if the player can play
+   * @param {String} player
+   */
+  function hasAvailableMove(player) {
+    let total = 0;
+    let pieces = board.getAllPieces(player);
+    for (let piece of pieces) {
+      total += piece.getAvailableMoves().length;
+    }
+    return total > 0;
+  }
+
   if (currentPlayer === players.AI) {
     let bestMove = getBestMove();
-    let pieceToMove = board.getPiece(bestMove.from.col, bestMove.from.row);
-    board.movePiece(pieceToMove, bestMove.to.col, bestMove.to.row);
-    currentPlayer = players.HUMAN;
+    if (bestMove) {
+      let pieceToMove = board.getPiece(bestMove.from.col, bestMove.from.row);
+      board.movePiece(pieceToMove, bestMove.to.col, bestMove.to.row);
+      if (hasAvailableMove(players.HUMAN)) {
+        currentPlayer = players.HUMAN;
+      }
+    }
+    // Ai cannot plays anymore because there are no available moves
+    else {
+    }
   }
 }
 

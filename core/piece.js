@@ -78,7 +78,7 @@ class Piece {
       translations.push({ col: +1, row: +1 });
     }
     // The moves are up of the piece
-    else {
+    if (this._player === players.HUMAN) {
       translations.push({ col: -1, row: -1 });
       translations.push({ col: +1, row: -1 });
     }
@@ -147,6 +147,7 @@ class Piece {
                   b.isKingRow(destRow, instance._player) && !instance._isKing
                     ? weight + 10
                     : weight + 1;
+                if (jumpedPiece.isKing) moveWeight += 10;
                 let move = new Move(
                   { col: instance._col, row: instance._row }, // from
                   { col: destCol, row: destRow }, // to
@@ -253,10 +254,12 @@ class Piece {
                 !isAlreadyVisited(destCol, destRow) &&
                 !isSlideSquare(destCol, destRow)
               ) {
+                // if the jumped piece is a king, we add an important weight to the move
+                let moveWeight = jumpedPiece.isKing ? weight + 10 : weight + 1;
                 let move = new Move(
-                  { col, row }, // from
+                  { col: instance._col, row: instance._row }, // from
                   { col: destCol, row: destRow }, // to
-                  weight + 1,
+                  moveWeight,
                   jumpedPiece,
                   prevMove
                 );

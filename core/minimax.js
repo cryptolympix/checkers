@@ -1,4 +1,4 @@
-let MAX_DEPTH = 2;
+let MAX_DEPTH = 3;
 
 function clone(obj) {
   if (obj === null || typeof obj !== 'object') return obj;
@@ -27,20 +27,14 @@ function getBestMove() {
     return result;
   }
 
-  /**
-   * Return true if the player can play a jumping move
-   */
-  function canPlayJumpingMove() {
-    return getJumpingMoves().length > 0;
-  }
+  let jumpingMoves = getJumpingMoves();
 
-  if (canPlayJumpingMove()) {
-    let jumpingMoves = getJumpingMoves();
+  if (jumpingMoves.length > 0) {
     for (let move of jumpingMoves) {
       let boardClone = clone(board);
       let piece = boardClone.getPiece(move.from.col, move.from.row);
       boardClone.movePiece(piece, move.to.col, move.to.row);
-      let score = minimax(boardClone, 0, false);
+      let score = minimax(boardClone, MAX_DEPTH, false) + move.weight;
       boardClone = null;
       if (score > bestScore) {
         bestMoves = [];
@@ -57,7 +51,7 @@ function getBestMove() {
         let boardClone = clone(board);
         let pieceClone = clone(piece);
         boardClone.movePiece(pieceClone, move.to.col, move.to.row);
-        let score = minimax(boardClone, 0, false);
+        let score = minimax(boardClone, MAX_DEPTH, -Infinity, Infinity, false);
         boardClone = null;
         if (score > bestScore) {
           bestMoves = [];
@@ -78,9 +72,9 @@ function getBestMove() {
   }
 }
 
-function minimax(board, depth, isMaximizingPlayer) {
+function minimax(board, depth, alpha, beta, isMaximizingPlayer) {
   let result = checkWinner();
-  if (depth > MAX_DEPTH || result) {
+  if (depth === 0 || result) {
     if (result === players.HUMAN) return -100;
     if (result === players.AI) return 100;
     return board.getNumberOfPieces(players.AI) - board.getNumberOfPieces(players.HUMAN);
@@ -94,9 +88,11 @@ function minimax(board, depth, isMaximizingPlayer) {
         let boardClone = clone(board);
         let pieceClone = clone(piece);
         boardClone.movePiece(pieceClone, move.to.col, move.to.row);
-        let score = minimax(boardClone, depth + 1, false);
+        let score = minimax(boardClone, depth - 1, false) + move.weight;
         boardClone = null;
         bestScore = max(score, bestScore);
+        alpha = max(alpha, score);
+        if (beta <= alpha) break;
       }
     }
     return bestScore;
@@ -108,9 +104,11 @@ function minimax(board, depth, isMaximizingPlayer) {
         let boardClone = clone(board);
         let pieceClone = clone(piece);
         boardClone.movePiece(pieceClone, move.to.col, move.to.row);
-        let score = minimax(boardClone, depth + 1, true);
+        let score = minimax(boardClone, depth - 1, true) - move.weight;
         boardClone = null;
         bestScore = min(score, bestScore);
+        beta = min(beta, score);
+        if (beta <= alpha) break;
       }
     }
     return bestScore;
