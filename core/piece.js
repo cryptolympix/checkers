@@ -48,29 +48,19 @@ class Piece {
     }
 
     if (this._isKing) {
-      let imageDim = dim / 2;
-      tint(0, 100); // Set transparency
+      fill('white');
+      textAlign(CENTER, CENTER);
+      textFont('Roboto');
+      textSize(18);
       if (this.isInAnimation()) {
         let currentPosition = this._animations[0];
-        image(
-          kingImg,
-          currentPosition.x - dim / 4,
-          currentPosition.y - dim / 4,
-          imageDim,
-          imageDim
-        );
+        text('K', currentPosition.x, currentPosition.y);
         this._animations.shift();
         if (this._animations.length === 0) {
           pieceInAnimation = null;
         }
       } else {
-        image(
-          kingImg,
-          centerX - imageDim / 2,
-          centerY - imageDim / 2,
-          imageDim,
-          imageDim
-        );
+        text('K', centerX, centerY);
       }
     }
   }
@@ -100,7 +90,7 @@ class Piece {
         let stepX = dx / frameCount;
         let stepY = dy / frameCount;
 
-        for (let a = 0; a < frameCount; a++) {
+        for (let a = 0; a <= frameCount; a++) {
           let x = initialMoveX + a * stepX;
           let y = initialMoveY + a * stepY;
           this._animations.push({ x, y });

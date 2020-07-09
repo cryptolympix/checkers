@@ -1,20 +1,27 @@
 let CANVAS_DIM = 800;
-if (window.innerWidth <= 900) CANVAS_DIM = (9 * window.innerWidth) / 10;
+if (window.innerWidth <= 800) CANVAS_DIM = (9 * window.innerWidth) / 10;
+
+let BOARD_COLUMN = 10;
 
 let SHOW_MOVES = false;
 let SHOW_MOVES_WEIGHT = false;
+
+let levels = { EASY: 'Easy', MEDIUM: 'Medium', HARD: 'Hard' };
+let LEVEL = levels.MEDIUM;
+let MINIMAX_MAX_DEPTH = 2;
 
 let AI_COLOR = '#DEB887';
 let HUMAN_COLOR = '#8B0000';
 let FOCUS_COLOR = '#6666';
 let INFO_COLOR = '#4682B4';
-let SHOW_COLOR = '#4682B4';
+let SHOW_COLOR = '#3CB371';
 let DARK_SQUARE_COLOR = 'black';
 let LIGHT_SQUARE_COLOR = 'white';
 
-let kingImg;
 let infoView;
-let toggleButton;
+let helperButton;
+let levelButton;
+let resetButton;
 
 let gameMsg = "It's your turn";
 let gameMsgColor = HUMAN_COLOR;
@@ -28,17 +35,28 @@ let pieceSelected = null;
 let pieceInAnimation = null;
 let requiredMoves = [];
 
-function preload() {
-  kingImg = loadImage('https://image.flaticon.com/icons/svg/2057/2057084.svg');
-}
-
 function setup() {
   infoView = createDiv();
   createCanvas(CANVAS_DIM, CANVAS_DIM);
-  toggleButton = createButton();
-  board = new Board(CANVAS_DIM, 10);
+
+  helperButton = createButton();
+  helperButton.mousePressed(() => (SHOW_MOVES = !SHOW_MOVES));
+  levelButton = createSelect();
+  levelButton.option(levels.EASY);
+  levelButton.option(levels.MEDIUM);
+  levelButton.option(levels.HARD);
+  levelButton.changed(onLevelChange);
+  resetButton = createButton();
+  resetButton.mousePressed(() => reset());
+
+  reset();
+}
+
+function reset() {
+  board = new Board(CANVAS_DIM, BOARD_COLUMN);
   currentPlayer = players.HUMAN;
   end = false;
+  loop();
 }
 
 function draw() {
@@ -46,7 +64,11 @@ function draw() {
 
   drawGameInfo();
   board.draw();
-  drawToggleButton();
+  drawButtons();
+
+  if (end && !pieceInAnimation) {
+    noLoop();
+  }
 
   // The AI plays when it's his turn and when the move animation of the human is end
   if (currentPlayer === players.AI && !pieceInAnimation) {
@@ -54,13 +76,7 @@ function draw() {
     gameMsgColor = AI_COLOR;
     setTimeout(function () {
       AI();
-      gameMsg = "It's your turn";
-      gameMsgColor = HUMAN_COLOR;
     }, 500);
-  }
-
-  if (end) {
-    noLoop();
   }
 }
 
@@ -83,15 +99,30 @@ function drawGameInfo() {
   infoView.id('info');
 }
 
-function drawToggleButton() {
-  toggleButton.html(`<span>${SHOW_MOVES ? 'Hide the moves' : 'Show the moves'}</span>`);
-  toggleButton.class('toggle-button');
-  toggleButton.style('opacity', currentPlayer === players.AI ? '0.5' : '1');
-  toggleButton.mousePressed(function () {
-    if (currentPlayer === players.HUMAN) {
-      SHOW_MOVES = !SHOW_MOVES;
-    }
-  });
+function drawButtons() {
+  helperButton.html(`<span>${SHOW_MOVES ? 'Hide moves' : 'Show moves'}</span>`);
+  resetButton.html(`<span>Reset</span>`);
+  helperButton.class('button');
+  levelButton.class('button');
+  resetButton.class('button');
+
+  if (window.innerWidth <= 800) {
+    let width = (4 * CANVAS_DIM) / 10;
+    helperButton.size(width);
+    helperButton.position(0, 0, 'relative');
+    levelButton.size(width);
+    levelButton.position(0, 0, 'relative');
+    resetButton.size(width);
+    resetButton.position(0, 0, 'relative');
+  } else {
+    let width = (3 * CANVAS_DIM) / 10;
+    helperButton.size(width);
+    helperButton.position(-CANVAS_DIM / 2 + width / 2, 0, 'relative');
+    levelButton.size(width);
+    levelButton.position(0, -51, 'relative');
+    resetButton.size(width);
+    resetButton.position(CANVAS_DIM / 2 - width / 2, -101, 'relative');
+  }
 }
 
 function mouseReleased() {
@@ -220,18 +251,22 @@ function AI() {
   }
 
   if (currentPlayer === players.AI) {
-    let bestMove = getBestMove();
-    if (bestMove) {
+    if (hasAvailableMove(players.AI)) {
+      let bestMove = getBestMove();
       let pieceToMove = board.getPiece(bestMove.from.col, bestMove.from.row);
       board.movePiece(pieceToMove, bestMove.to.col, bestMove.to.row);
       let result = checkWinner();
       if (result) {
+        currentPlayer = null;
         end = true;
       } else {
         if (hasAvailableMove(players.HUMAN)) {
           currentPlayer = players.HUMAN;
+          gameMsg = "It's your turn";
+          gameMsgColor = HUMAN_COLOR;
         } else {
           end = true;
+          currentPlayer = null;
           gameMsg = 'You can no longer play';
           gameMsgColor = INFO_COLOR;
         }
@@ -240,6 +275,7 @@ function AI() {
     // Ai cannot plays anymore because there are no available moves
     else {
       end = true;
+      currentPlayer = null;
       gameMsg = 'The AI can no longer play';
       gameMsgColor = INFO_COLOR;
     }
@@ -264,4 +300,21 @@ function checkWinner() {
     gameMsgColor = winner === players.HUMAN ? 'green' : 'firebrick';
   }
   return winner;
+}
+
+function onLevelChange() {
+  let level = levelButton.value();
+  switch (level) {
+    case levels.EASY:
+      MINIMAX_MAX_DEPTH = 1;
+      break;
+    case levels.MEDIUM:
+      MINIMAX_MAX_DEPTH = 2;
+      break;
+    case levels.HARD:
+      MINIMAX_MAX_DEPTH = 3;
+      break;
+    default:
+      break;
+  }
 }

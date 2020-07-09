@@ -1,6 +1,5 @@
 html {
   width: 100vw;
-  height: 100vh;
   margin: 0;
   padding: 0;
   display: flex;
@@ -9,7 +8,6 @@ html {
 
 body {
   width: 800px;
-  height: 100%;
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -23,7 +21,7 @@ body {
   justify-content: space-around;
   align-items: center;
   width: 100%;
-  margin-bottom: 2vh;
+  margin: 2vh 0;
 }
 
 @media screen and (max-width: 900px) {
@@ -93,10 +91,9 @@ p {
   padding: 10px;
 }
 
-.toggle-button {
-  width: 140px;
+.button {
   padding: 6px 20px;
-  margin: 20px;
+  margin-top: 20px;
   cursor: pointer;
   border: 1px solid #bbb;
   overflow: visible;
@@ -154,11 +151,6 @@ p {
   -ms-user-select: none;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
-}
-
-.toggle-button:active,
-.toggle-button:focus {
-  appearance: none;
 }
 
 @media screen and (max-width: 600px) {

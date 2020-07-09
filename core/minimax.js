@@ -1,5 +1,3 @@
-let MAX_DEPTH = 2;
-
 function clone(obj) {
   if (obj === null || typeof obj !== 'object') return obj;
   let props = Object.getOwnPropertyDescriptors(obj);
@@ -35,7 +33,10 @@ function getBestMove() {
       let piece = boardClone.getPiece(move.from.col, move.from.row);
       boardClone.movePiece(piece, move.to.col, move.to.row);
       let score =
-        minimax(boardClone, MAX_DEPTH, -Infinity, Infinity, false) + move.weight;
+        minimax(boardClone, MINIMAX_MAX_DEPTH, -Infinity, Infinity, false) + LEVEL ===
+        levels.EASY
+          ? 0
+          : move.weight;
       boardClone = null;
       if (score > bestScore) {
         bestMoves = [];
@@ -53,7 +54,10 @@ function getBestMove() {
         let pieceClone = clone(piece);
         boardClone.movePiece(pieceClone, move.to.col, move.to.row);
         let score =
-          minimax(boardClone, MAX_DEPTH, -Infinity, Infinity, false) + move.weight;
+          minimax(boardClone, MINIMAX_MAX_DEPTH, -Infinity, Infinity, false) + LEVEL ===
+          levels.EASY
+            ? 0
+            : move.weight;
         boardClone = null;
         if (score > bestScore) {
           bestMoves = [];
@@ -90,7 +94,10 @@ function minimax(board, depth, alpha, beta, isMaximizingPlayer) {
         let boardClone = clone(board);
         let pieceClone = clone(piece);
         boardClone.movePiece(pieceClone, move.to.col, move.to.row);
-        let score = minimax(boardClone, depth - 1, false) + move.weight;
+        let score =
+          minimax(boardClone, depth - 1, alpha, beta, false) + LEVEL === levels.EASY
+            ? 0
+            : move.weight;
         boardClone = null;
         bestScore = max(score, bestScore);
         alpha = max(alpha, score);
@@ -106,7 +113,10 @@ function minimax(board, depth, alpha, beta, isMaximizingPlayer) {
         let boardClone = clone(board);
         let pieceClone = clone(piece);
         boardClone.movePiece(pieceClone, move.to.col, move.to.row);
-        let score = minimax(boardClone, depth - 1, true) - move.weight;
+        let score =
+          minimax(boardClone, depth - 1, alpha, beta, true) - LEVEL === levels.EASY
+            ? 0
+            : move.weight;
         boardClone = null;
         bestScore = min(score, bestScore);
         beta = min(beta, score);
