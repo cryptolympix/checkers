@@ -1,16 +1,31 @@
-let BOARD_DIM = 800;
+let CANVAS_DIM = 800;
+if (window.innerWidth <= 900) CANVAS_DIM = (9 * window.innerWidth) / 10;
 
-let DEBUG = true;
+let SHOW_MOVES = false;
+let SHOW_MOVES_WEIGHT = false;
+
+let AI_COLOR = '#DEB887';
+let HUMAN_COLOR = '#8B0000';
+let FOCUS_COLOR = '#6666';
+let INFO_COLOR = '#4682B4';
+let SHOW_COLOR = '#4682B4';
+let DARK_SQUARE_COLOR = 'black';
+let LIGHT_SQUARE_COLOR = 'white';
 
 let kingImg;
-let countView;
+let infoView;
+let toggleButton;
 
+let gameMsg = "It's your turn";
+let gameMsgColor = HUMAN_COLOR;
+
+let end;
 let board;
-let pieces = []; // The current pieces in the board
 let players = { HUMAN: 'human', AI: 'ai' };
 let currentPlayer;
 
 let pieceSelected = null;
+let pieceInAnimation = null;
 let requiredMoves = [];
 
 function preload() {
@@ -18,37 +33,75 @@ function preload() {
 }
 
 function setup() {
-  countView = createP();
-  createCanvas(BOARD_DIM, BOARD_DIM);
-  board = new Board(BOARD_DIM, 10);
+  infoView = createDiv();
+  createCanvas(CANVAS_DIM, CANVAS_DIM);
+  toggleButton = createButton();
+  board = new Board(CANVAS_DIM, 10);
   currentPlayer = players.HUMAN;
+  end = false;
 }
 
 function draw() {
   background(255);
-  drawCountInfo();
-  board.draw();
 
-  // Display the required moves
-  let dim = board.squareDim;
-  for (let move of requiredMoves) {
-    fill('orange');
-    rect(move.to.col * dim, move.to.row * dim, dim, dim);
+  drawGameInfo();
+  board.draw();
+  drawToggleButton();
+
+  // The AI plays when it's his turn and when the move animation of the human is end
+  if (currentPlayer === players.AI && !pieceInAnimation) {
+    gameMsg = 'AI is searching a move...';
+    gameMsgColor = AI_COLOR;
+    setTimeout(function () {
+      AI();
+      gameMsg = "It's your turn";
+      gameMsgColor = HUMAN_COLOR;
+    }, 500);
+  }
+
+  if (end) {
+    noLoop();
   }
 }
 
-function drawCountInfo() {
-  countView.html(
-    `Human : ${board.getNumberOfPieces(players.HUMAN)}<br/>AI : ${board.getNumberOfPieces(
-      players.AI
-    )}`
+function drawGameInfo() {
+  infoView.html(
+    `<div class="info-block">
+      <div class="count-block">
+        <span class="circle red"></span>
+        <p class="count">${board.getNumberOfPieces(players.HUMAN)}</p>
+      </div>
+      <div class="count-block">
+        <span class="circle brown"></span>
+        <p class="count">${board.getNumberOfPieces(players.AI)}</p>
+      </div>
+    </div>
+    <div class="info-block">
+      <p class="game-msg" style="color:${gameMsgColor}">${gameMsg}</p>
+    </div>`
   );
-  countView.style('font-family', 'Nunito');
-  countView.style('width', `${BOARD_DIM}px`);
+  infoView.id('info');
+}
+
+function drawToggleButton() {
+  toggleButton.html(`<span>${SHOW_MOVES ? 'Hide the moves' : 'Show the moves'}</span>`);
+  toggleButton.class('toggle-button');
+  toggleButton.style('opacity', currentPlayer === players.AI ? '0.5' : '1');
+  toggleButton.mousePressed(function () {
+    if (currentPlayer === players.HUMAN) {
+      SHOW_MOVES = !SHOW_MOVES;
+    }
+  });
 }
 
 function mouseReleased() {
-  if (mouseX < 0 || mouseX > board.pixelDim || mouseY < 0 || mouseY > board.pixelDim)
+  if (
+    end ||
+    mouseX < 0 ||
+    mouseX > board.pixelDim ||
+    mouseY < 0 ||
+    mouseY > board.pixelDim
+  )
     return;
 
   /**
@@ -121,10 +174,12 @@ function mouseReleased() {
       if (wishedMove.isJumpingMove()) {
         board.movePiece(pieceSelected, i, j);
         pieceSelected = null;
-        setTimeout(function () {
+        let result = checkWinner();
+        if (result) {
+          end = true;
+        } else {
           currentPlayer = players.AI;
-          AI();
-        }, 500);
+        }
       } else {
         // If the player wants to play a basic move but a jumping move
         // is available, he must plays it instead of the basic one.
@@ -138,10 +193,12 @@ function mouseReleased() {
         } else {
           board.movePiece(pieceSelected, i, j);
           pieceSelected = null;
-          setTimeout(function () {
+          let result = checkWinner();
+          if (result) {
+            end = true;
+          } else {
             currentPlayer = players.AI;
-            AI();
-          }, 500);
+          }
         }
       }
     }
@@ -167,12 +224,24 @@ function AI() {
     if (bestMove) {
       let pieceToMove = board.getPiece(bestMove.from.col, bestMove.from.row);
       board.movePiece(pieceToMove, bestMove.to.col, bestMove.to.row);
-      if (hasAvailableMove(players.HUMAN)) {
-        currentPlayer = players.HUMAN;
+      let result = checkWinner();
+      if (result) {
+        end = true;
+      } else {
+        if (hasAvailableMove(players.HUMAN)) {
+          currentPlayer = players.HUMAN;
+        } else {
+          end = true;
+          gameMsg = 'You can no longer play';
+          gameMsgColor = INFO_COLOR;
+        }
       }
     }
     // Ai cannot plays anymore because there are no available moves
     else {
+      end = true;
+      gameMsg = 'The AI can no longer play';
+      gameMsgColor = INFO_COLOR;
     }
   }
 }
@@ -188,5 +257,11 @@ function checkWinner() {
 
   if (piecePlayerCount[0] === 0) winner = players.AI;
   if (piecePlayerCount[1] === 0) winner = players.HUMAN;
+
+  if (winner) {
+    gameMsg =
+      winner === players.HUMAN ? 'Congratulation !' : 'AI is too strong for you...';
+    gameMsgColor = winner === players.HUMAN ? 'green' : 'firebrick';
+  }
   return winner;
 }

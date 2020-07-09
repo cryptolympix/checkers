@@ -1,7 +1,3 @@
-let AI_COLOR = '#DEB887';
-let HUMAN_COLOR = '#8B0000';
-let FOCUS_COLOR = '#6666';
-
 class Piece {
   constructor(col, row, player) {
     this._col = col;
@@ -9,6 +5,7 @@ class Piece {
     this._player = player;
     this._color = player === players.AI ? AI_COLOR : HUMAN_COLOR;
     this._isKing = false;
+    this._animations = [];
   }
 
   draw() {
@@ -16,24 +13,36 @@ class Piece {
     let centerX = this._col * dim + dim / 2;
     let centerY = this._row * dim + dim / 2;
     fill(this._color);
-    circle(centerX, centerY, (5 * dim) / 6);
+
+    if (this === pieceInAnimation) {
+      let currentPosition = this._animations[0];
+      circle(currentPosition.x, currentPosition.y, (5 * dim) / 6);
+      if (!this._isKing) this._animations.shift(); // We keep the position to display the image
+      if (this._animations.length === 0) {
+        pieceInAnimation = null;
+      }
+    } else {
+      circle(centerX, centerY, (5 * dim) / 6);
+    }
 
     if (this === pieceSelected) {
       fill(FOCUS_COLOR);
       rect(this._col * dim, this._row * dim, dim, dim);
 
       // To debug the moves
-      if (DEBUG) {
+      if (SHOW_MOVES) {
         let moves = this.getAvailableMoves();
         for (let move of moves) {
-          fill('green');
+          fill(SHOW_COLOR);
           rect(move.to.col * dim, move.to.row * dim, dim, dim);
 
-          fill('white');
-          textFont('Roboto');
-          textSize(18);
-          textAlign(CENTER);
-          text(move.weight, move.to.col * dim + dim / 2, move.to.row * dim + dim / 2);
+          if (SHOW_MOVES_WEIGHT) {
+            fill('white');
+            textFont('Roboto');
+            textSize(18);
+            textAlign(CENTER);
+            text(move.weight, move.to.col * dim + dim / 2, move.to.row * dim + dim / 2);
+          }
         }
       }
     }
@@ -41,7 +50,67 @@ class Piece {
     if (this._isKing) {
       let imageDim = dim / 2;
       tint(0, 100); // Set transparency
-      image(kingImg, centerX - imageDim / 2, centerY - imageDim / 2, imageDim, imageDim);
+      if (this.isInAnimation()) {
+        let currentPosition = this._animations[0];
+        image(
+          kingImg,
+          currentPosition.x - dim / 4,
+          currentPosition.y - dim / 4,
+          imageDim,
+          imageDim
+        );
+        this._animations.shift();
+        if (this._animations.length === 0) {
+          pieceInAnimation = null;
+        }
+      } else {
+        image(
+          kingImg,
+          centerX - imageDim / 2,
+          centerY - imageDim / 2,
+          imageDim,
+          imageDim
+        );
+      }
+    }
+  }
+
+  isInAnimation() {
+    return this._animations.length > 0;
+  }
+
+  /**
+   * Animate the piece when it has been moved
+   * @param {Array<{Number, Number}>} steps - An array of step to go to a position
+   */
+  animate(steps) {
+    if (steps.length > 1) {
+      pieceInAnimation = this;
+      let frameCount = 10 * steps.length;
+      let dim = board.pixelDim / board.numCol;
+
+      for (let i = 1; i < steps.length; i++) {
+        let prevPosition = steps[i - 1];
+        let nextPosition = steps[i];
+        let initialMoveX = prevPosition.col * dim + dim / 2; // Center X
+        let initialMoveY = prevPosition.row * dim + dim / 2; // Center Y
+
+        let dx = (nextPosition.col - prevPosition.col) * dim;
+        let dy = (nextPosition.row - prevPosition.row) * dim;
+        let stepX = dx / frameCount;
+        let stepY = dy / frameCount;
+
+        for (let a = 0; a < frameCount; a++) {
+          let x = initialMoveX + a * stepX;
+          let y = initialMoveY + a * stepY;
+          this._animations.push({ x, y });
+        }
+      }
+
+      // Set the final position col and row
+      let finalStep = steps[steps.length - 1];
+      this._col = finalStep.col;
+      this._row = finalStep.row;
     }
   }
 

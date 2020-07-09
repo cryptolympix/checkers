@@ -1,6 +1,3 @@
-let DARK_SQUARE_COLOR = 'black';
-let LIGHT_SQUARE_COLOR = 'white';
-
 class Board {
   /**
    * @param {Number} pixelDim - The dimension in pixels
@@ -52,6 +49,12 @@ class Board {
     // Draw the pieces
     for (let p of this._pieces) {
       p.draw();
+    }
+
+    // Display the required moves
+    for (let move of requiredMoves) {
+      fill('orange');
+      rect(move.to.col * dim, move.to.row * dim, dim, dim);
     }
   }
 
@@ -127,13 +130,35 @@ class Board {
     // Check if the square pressed is an available move
     for (let move of moves) {
       if (move.to.col === toCol && move.to.row === toRow) {
-        // Update the tab
-        this._tab[piece.col][piece.row] = null;
-        this._tab[toCol][toRow] = piece;
+        if (move.prevMove) {
+          let steps = [];
+          let current = move;
 
-        // Update the data of the piece
-        piece.col = toCol;
-        piece.row = toRow;
+          // Update the tab
+          this._tab[piece.col][piece.row] = null;
+          this._tab[toCol][toRow] = piece;
+
+          // Add the step to go the destination position
+          while (current.prevMove) {
+            steps.unshift({ col: current.to.col, row: current.to.row });
+            current = current.prevMove;
+          }
+          steps.unshift({ col: current.to.col, row: current.to.row });
+          steps.unshift({ col: piece.col, row: piece.row }); // Initial position
+
+          // Animation
+          piece.animate(steps);
+        } else {
+          // Update the tab
+          this._tab[piece.col][piece.row] = null;
+          this._tab[toCol][toRow] = piece;
+
+          // Animation
+          piece.animate([
+            { col: piece.col, row: piece.row },
+            { col: toCol, row: toRow },
+          ]);
+        }
 
         // If we add the piece on the opponent king row, it becomes a king
         if (this.isKingRow(toRow, piece.player)) {

@@ -1,4 +1,4 @@
-let MAX_DEPTH = 3;
+let MAX_DEPTH = 2;
 
 function clone(obj) {
   if (obj === null || typeof obj !== 'object') return obj;
@@ -34,7 +34,8 @@ function getBestMove() {
       let boardClone = clone(board);
       let piece = boardClone.getPiece(move.from.col, move.from.row);
       boardClone.movePiece(piece, move.to.col, move.to.row);
-      let score = minimax(boardClone, MAX_DEPTH, false) + move.weight;
+      let score =
+        minimax(boardClone, MAX_DEPTH, -Infinity, Infinity, false) + move.weight;
       boardClone = null;
       if (score > bestScore) {
         bestMoves = [];
@@ -51,7 +52,8 @@ function getBestMove() {
         let boardClone = clone(board);
         let pieceClone = clone(piece);
         boardClone.movePiece(pieceClone, move.to.col, move.to.row);
-        let score = minimax(boardClone, MAX_DEPTH, -Infinity, Infinity, false);
+        let score =
+          minimax(boardClone, MAX_DEPTH, -Infinity, Infinity, false) + move.weight;
         boardClone = null;
         if (score > bestScore) {
           bestMoves = [];
