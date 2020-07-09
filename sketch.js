@@ -1,4 +1,6 @@
 let CANVAS_DIM = 800;
+
+// On mobile
 if (window.innerWidth <= 800) CANVAS_DIM = (9 * window.innerWidth) / 10;
 
 let BOARD_COLUMN = 10;
@@ -106,7 +108,7 @@ function drawButtons() {
   levelButton.class('button');
   resetButton.class('button');
 
-  if (window.innerWidth <= 800) {
+  if (window.innerWidth <= 600) {
     let width = (4 * CANVAS_DIM) / 10;
     helperButton.size(width);
     helperButton.position(0, 0, 'relative');
