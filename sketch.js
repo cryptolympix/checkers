@@ -74,7 +74,7 @@ function draw() {
   if (currentPlayer === players.AI && !pieceInAnimation) {
     gameMsg = 'AI is searching a move...';
     gameMsgColor = AI_COLOR;
-    setTimeout(function () {
+    setTimeout(() => {
       AI();
     }, 500);
   }
