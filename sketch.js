@@ -14,7 +14,7 @@ let pieceSelected = null;
 let requiredMoves = [];
 
 function preload() {
-  kingImg = loadImage('assets/crown.png');
+  kingImg = loadImage('https://image.flaticon.com/icons/svg/2057/2057084.svg');
 }
 
 function setup() {
