@@ -83,6 +83,7 @@ class Piece {
    * @param {Array<{Number, Number}>} steps - An array of step to go to a position
    */
   animate(steps) {
+    // At least an initial position and a destination
     if (steps.length > 1) {
       pieceInAnimation = this;
       let frameCount = 10 * steps.length;
@@ -131,37 +132,31 @@ class Piece {
 
   /**
    * Get the moves to a next dark square
-   * @param {Board} b - A board  (by default the displayed board)
+   * @param {Board} b - A board (by default the displayed board)
    */
   getBasicMoves(b = board) {
     let moves = [];
     let col = this._col;
     let row = this._row;
     let from = { col, row };
-    let translations = [];
+    let directions = [];
 
     // The moves are down of the piece
     if (this._player === players.AI) {
-      translations.push({ col: -1, row: +1 });
-      translations.push({ col: +1, row: +1 });
+      directions.push({ col: -1, row: +1 });
+      directions.push({ col: +1, row: +1 });
     }
     // The moves are up of the piece
     if (this._player === players.HUMAN) {
-      translations.push({ col: -1, row: -1 });
-      translations.push({ col: +1, row: -1 });
+      directions.push({ col: -1, row: -1 });
+      directions.push({ col: +1, row: -1 });
     }
 
-    for (let t of translations) {
-      if (
-        col + t.col >= 0 &&
-        col + t.col < b.numCol &&
-        row + t.row >= 0 &&
-        row + t.row < b.numCol &&
-        !b.hasPiece(col + t.col, row + t.row)
-      ) {
-        let to = { col: col + t.col, row: row + t.row };
-        // We add an important weight to the move if this move allows the piece to become a king
-        let weight = b.isKingRow(row + t.row, this._player) && !this._isKing ? 1 : 0;
+    for (let d of directions) {
+      if (b.contains(col + d.col, row + d.row) && !b.hasPiece(col + t.col, row + t.row)) {
+        let to = { col: col + d.col, row: row + d.row };
+        // We add more weight to the move if this move allows the piece to become a king
+        let weight = b.isKingRow(row + d.row, this._player) && !this._isKing ? 1 : 0;
         let move = new Move(from, to, weight, null, null);
         moves.push(move);
       }

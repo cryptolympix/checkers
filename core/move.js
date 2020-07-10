@@ -1,4 +1,12 @@
 class Move {
+  /**
+   * Constructor
+   * @param {*} from - The initial position of the move
+   * @param {*} to - The destination of the move
+   * @param {*} weight - The weight of the move, more the weight is great, more the weight is good
+   * @param {*} jumpedPiece - The piece jumped by the move, if it does
+   * @param {*} prevMove - The previous move if a move is the sum of some little moves
+   */
   constructor(from, to, weight, jumpedPiece, prevMove) {
     this._from = from; // { col, row }
     this._to = to; // { col, row }

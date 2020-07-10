@@ -2,7 +2,6 @@ class Board {
   /**
    * @param {Number} pixelDim - The dimension in pixels
    * @param {Number} numCol - The number of column
-   * @param {Array<Piece>} pieces - The current pieces on the board
    */
   constructor(pixelDim, numCol) {
     this._pixelDim = pixelDim;

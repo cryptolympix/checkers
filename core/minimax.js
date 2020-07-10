@@ -1,3 +1,7 @@
+/**
+ * Clone an object
+ * @param {any} obj - An original object
+ */
 function clone(obj) {
   if (obj === null || typeof obj !== 'object') return obj;
   let props = Object.getOwnPropertyDescriptors(obj);
@@ -46,7 +50,7 @@ function getScore(board, minimaxScore, move, isMaximizingPlayer) {
 /*********************************************************************/
 
 /**
- * Get the best move for the AI, depending of the game level
+ * Get the best move for the AI, depending of the game level selected
  */
 function getBestMove() {
   let bestMoves = [];
@@ -68,6 +72,7 @@ function getBestMove() {
 
   let jumpingMoves = getJumpingMoves();
 
+  // If the AI can play a jumping move, he must play it
   if (jumpingMoves.length > 0) {
     for (let move of jumpingMoves) {
       let boardClone = clone(board);
@@ -113,6 +118,7 @@ function getBestMove() {
     }
   }
 
+  // If we find many moves, we select one of them
   if (bestMoves.length > 1) {
     let rand = floor(random() * bestMoves.length);
     return bestMoves[rand];
