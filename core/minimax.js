@@ -9,8 +9,8 @@ function clone(obj) {
 
 /**
  * Return the number of pieces lost for a player
- * @param {Board} board
- * @param {String} player
+ * @param {Board} board - A clone board
+ * @param {String} player - A player to get the number
  */
 function getNumberOfLostPieces(board, player) {
   let numberOfInitialPiece = board.getNumberOfInitialPieces() / 2;
@@ -19,8 +19,10 @@ function getNumberOfLostPieces(board, player) {
 
 /**
  * Get the score of a move
- * @param {Board} board
- * @param {Move} move
+ * @param {Board} board - A clone board
+ * @param {Number} minimaxScore - The recursive score of the algorithm
+ * @param {Move} move - The player of the move
+ * @param {Boolean} isMaximizingPlayer - Maximize or not the score
  */
 function getScore(board, minimaxScore, move, isMaximizingPlayer) {
   let player = isMaximizingPlayer ? players.AI : players.HUMAN;
@@ -29,7 +31,7 @@ function getScore(board, minimaxScore, move, isMaximizingPlayer) {
   // If the move jumped N pieces, the weight of the move i N. We add 1 for the king jumped.
   let weight = LEVEL === levels.EASY ? 0 : move.weight;
 
-  // In the hard level, the AI try to minimize the piece lost.
+  // In the hard level, the AI try to minimize the pieces lost.
   let malus = LEVEL === levels.HARD ? getNumberOfLostPieces(board, player) : 0;
 
   // For the opponent we invert the variables
@@ -43,6 +45,9 @@ function getScore(board, minimaxScore, move, isMaximizingPlayer) {
 
 /*********************************************************************/
 
+/**
+ * Get the best move for the AI, depending of the game level
+ */
 function getBestMove() {
   let bestMoves = [];
   let bestScore = -Infinity;
@@ -116,6 +121,9 @@ function getBestMove() {
   }
 }
 
+/**
+ * Alpha beta pruning algorithm
+ */
 function minimax(board, depth, alpha, beta, isMaximizingPlayer) {
   let result = checkWinner();
   if (depth === 0 || result) {

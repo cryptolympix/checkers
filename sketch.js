@@ -220,6 +220,7 @@ function mouseReleased() {
         let result = checkWinner();
         if (result) {
           end = true;
+          currentPlayer = null;
         } else {
           currentPlayer = players.AI;
         }
@@ -239,6 +240,7 @@ function mouseReleased() {
           let result = checkWinner();
           if (result) {
             end = true;
+            currentPlayer = null;
           } else {
             currentPlayer = players.AI;
           }
