@@ -48,19 +48,28 @@ class Piece {
     }
 
     if (this._isKing) {
-      fill('white');
-      textAlign(CENTER, CENTER);
-      textFont('Roboto');
-      textSize(18);
+      let imageDim = dim / 2;
       if (this.isInAnimation()) {
         let currentPosition = this._animations[0];
-        text('K', currentPosition.x, currentPosition.y);
+        image(
+          crownImg,
+          currentPosition.x - dim / 4,
+          currentPosition.y - dim / 4,
+          imageDim,
+          imageDim
+        );
         this._animations.shift();
         if (this._animations.length === 0) {
           pieceInAnimation = null;
         }
       } else {
-        text('K', centerX, centerY);
+        image(
+          crownImg,
+          centerX - imageDim / 2,
+          centerY - imageDim / 2,
+          imageDim,
+          imageDim
+        );
       }
     }
   }

@@ -1,6 +1,4 @@
 let CANVAS_DIM = 800;
-
-// On mobile
 if (window.innerWidth <= 800) CANVAS_DIM = (9 * window.innerWidth) / 10;
 
 let BOARD_COLUMN = 10;
@@ -8,10 +6,12 @@ let BOARD_COLUMN = 10;
 let SHOW_MOVES = false;
 let SHOW_MOVES_WEIGHT = false;
 
+// Level of the game
 let levels = { EASY: 'Easy', MEDIUM: 'Medium', HARD: 'Hard' };
 let LEVEL = levels.MEDIUM;
 let MINIMAX_MAX_DEPTH = 2;
 
+// Colors
 let AI_COLOR = '#DEB887';
 let HUMAN_COLOR = '#8B0000';
 let FOCUS_COLOR = '#6666';
@@ -20,10 +20,14 @@ let SHOW_COLOR = '#3CB371';
 let DARK_SQUARE_COLOR = 'black';
 let LIGHT_SQUARE_COLOR = 'white';
 
+// Containers
 let infoView;
 let helperButton;
 let levelButton;
 let resetButton;
+
+// Assets
+let crownImg;
 
 let gameMsg;
 let gameMsgColor;
@@ -36,6 +40,10 @@ let currentPlayer;
 let pieceSelected = null;
 let pieceInAnimation = null;
 let requiredMoves = [];
+
+function preload() {
+  crownImg = loadImage('assets/crown.svg');
+}
 
 function setup() {
   infoView = createDiv();
