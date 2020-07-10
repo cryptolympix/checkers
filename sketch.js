@@ -1,7 +1,6 @@
 let CANVAS_DIM = 1200;
 
-// On mobile
-if (window.innerWidth <= 800) CANVAS_DIM = (9 * window.innerWidth) / 10;
+if (window.innerWidth <= 1300) CANVAS_DIM = (9 * window.innerWidth) / 10;
 
 let BOARD_COLUMN = 10;
 
