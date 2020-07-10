@@ -286,21 +286,19 @@ function AI() {
 
 function checkWinner() {
   let winner = null;
-  let piecePlayerCount = [0, 0];
 
-  for (let p of board.getAllPieces()) {
-    if (p.player === players.HUMAN) piecePlayerCount[0]++;
-    if (p.player === players.AI) piecePlayerCount[1]++;
+  if (board.getNumberOfPieces(players.AI) === 0) {
+    winner = players.HUMAN;
+    gameMsg = 'Congratulation !';
+    gameMsgColor = 'green';
   }
 
-  if (piecePlayerCount[0] === 0) winner = players.AI;
-  if (piecePlayerCount[1] === 0) winner = players.HUMAN;
-
-  if (winner) {
-    gameMsg =
-      winner === players.HUMAN ? 'Congratulation !' : 'AI is too strong for you...';
-    gameMsgColor = winner === players.HUMAN ? 'green' : 'firebrick';
+  if (board.getNumberOfPieces(players.HUMAN) === 0) {
+    winner = players.AI;
+    gameMsg = 'AI is too strong for you...';
+    gameMsgColor = 'firebrick';
   }
+
   return winner;
 }
 

@@ -152,7 +152,7 @@ class Piece {
       ) {
         let to = { col: col + t.col, row: row + t.row };
         // We add an important weight to the move if this move allows the piece to become a king
-        let weight = b.isKingRow(row + t.row, this._player) && !this._isKing ? 10 : 0;
+        let weight = b.isKingRow(row + t.row, this._player) && !this._isKing ? 1 : 0;
         let move = new Move(from, to, weight, null, null);
         moves.push(move);
       }
@@ -200,13 +200,13 @@ class Piece {
               // If the destination square is empty and does not have been visited yet
               // (prevent to get the moves twice in the array of moves)
               if (!b.hasPiece(destCol, destRow) && !isAlreadyVisited(destCol, destRow)) {
-                // We add an important weight to the move if this move allows the piece to become a king,
+                // We add more weight to the move if this move allows the piece to become a king,
                 // otherwise we just increment it
                 let moveWeight =
                   b.isKingRow(destRow, instance._player) && !instance._isKing
-                    ? weight + 10
+                    ? weight + 2
                     : weight + 1;
-                if (jumpedPiece.isKing) moveWeight += 10;
+                if (jumpedPiece.isKing) moveWeight += 2;
                 let move = new Move(
                   { col: instance._col, row: instance._row }, // from
                   { col: destCol, row: destRow }, // to
@@ -314,7 +314,7 @@ class Piece {
                 !isSlideSquare(destCol, destRow)
               ) {
                 // if the jumped piece is a king, we add an important weight to the move
-                let moveWeight = jumpedPiece.isKing ? weight + 10 : weight + 1;
+                let moveWeight = jumpedPiece.isKing ? weight + 2 : weight + 1;
                 let move = new Move(
                   { col: instance._col, row: instance._row }, // from
                   { col: destCol, row: destRow }, // to
