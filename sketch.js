@@ -1,4 +1,4 @@
-let CANVAS_DIM = 800;
+let CANVAS_DIM = 1200;
 
 // On mobile
 if (window.innerWidth <= 800) CANVAS_DIM = (9 * window.innerWidth) / 10;
