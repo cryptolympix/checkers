@@ -25,8 +25,8 @@ let helperButton;
 let levelButton;
 let resetButton;
 
-let gameMsg = "It's your turn";
-let gameMsgColor = HUMAN_COLOR;
+let gameMsg;
+let gameMsgColor;
 
 let end;
 let board;
@@ -56,8 +56,10 @@ function setup() {
 
 function reset() {
   board = new Board(CANVAS_DIM, BOARD_COLUMN);
-  currentPlayer = players.HUMAN;
   end = false;
+  currentPlayer = players.HUMAN;
+  gameMsg = "It's your turn";
+  gameMsgColor = HUMAN_COLOR;
   loop();
 }
 

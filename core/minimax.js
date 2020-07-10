@@ -7,6 +7,42 @@ function clone(obj) {
   return Object.create(Object.getPrototypeOf(obj), props);
 }
 
+/**
+ * Return the number of pieces lost for a player
+ * @param {Board} board
+ * @param {String} player
+ */
+function getNumberOfLostPieces(board, player) {
+  let numberOfInitialPiece = board.getNumberOfInitialPieces() / 2;
+  return numberOfInitialPiece - board.getNumberOfPieces(player);
+}
+
+/**
+ * Get the score of a move
+ * @param {Board} board
+ * @param {Move} move
+ */
+function getScore(board, minimaxScore, move, isMaximizingPlayer) {
+  let player = isMaximizingPlayer ? players.AI : players.HUMAN;
+  // A move is better according of the weight of the move
+  // The weight of a basic move is 0, and 1 if he allows piece to become a king
+  // If the move jumped N pieces, the weight of the move i N. We add 1 for the king jumped.
+  let weight = LEVEL === levels.EASY ? 0 : move.weight;
+
+  // In the hard level, the AI try to minimize the piece lost.
+  let malus = LEVEL === levels.HARD ? getNumberOfLostPieces(board, player) : 0;
+
+  // For the opponent we invert the variables
+  if (!isMaximizingPlayer) {
+    weight = -weight;
+    malus = -malus;
+  }
+
+  return minimaxScore + weight - malus;
+}
+
+/*********************************************************************/
+
 function getBestMove() {
   let bestMoves = [];
   let bestScore = -Infinity;
@@ -32,9 +68,12 @@ function getBestMove() {
       let boardClone = clone(board);
       let piece = boardClone.getPiece(move.from.col, move.from.row);
       boardClone.movePiece(piece, move.to.col, move.to.row);
-      let weight = LEVEL === levels.EASY ? 0 : move.weight;
-      let score =
-        minimax(boardClone, MINIMAX_MAX_DEPTH, -Infinity, Infinity, false) + weight;
+      let score = getScore(
+        boardClone,
+        minimax(boardClone, MINIMAX_MAX_DEPTH, -Infinity, Infinity, false),
+        move,
+        true
+      );
       boardClone = null;
       if (score > bestScore) {
         bestMoves = [];
@@ -51,9 +90,12 @@ function getBestMove() {
         let boardClone = clone(board);
         let pieceClone = clone(piece);
         boardClone.movePiece(pieceClone, move.to.col, move.to.row);
-        let weight = LEVEL === levels.EASY ? 0 : move.weight;
-        let score =
-          minimax(boardClone, MINIMAX_MAX_DEPTH, -Infinity, Infinity, false) + weight;
+        let score = getScore(
+          boardClone,
+          minimax(boardClone, MINIMAX_MAX_DEPTH, -Infinity, Infinity, false),
+          move,
+          true
+        );
         boardClone = null;
         if (score > bestScore) {
           bestMoves = [];
@@ -90,8 +132,12 @@ function minimax(board, depth, alpha, beta, isMaximizingPlayer) {
         let boardClone = clone(board);
         let pieceClone = clone(piece);
         boardClone.movePiece(pieceClone, move.to.col, move.to.row);
-        let weight = LEVEL === levels.EASY ? 0 : move.weight;
-        let score = minimax(boardClone, depth - 1, alpha, beta, false) + weight;
+        let score = getScore(
+          boardClone,
+          minimax(boardClone, depth - 1, alpha, beta, false),
+          move,
+          true
+        );
         boardClone = null;
         bestScore = max(score, bestScore);
         alpha = max(alpha, score);
@@ -107,8 +153,12 @@ function minimax(board, depth, alpha, beta, isMaximizingPlayer) {
         let boardClone = clone(board);
         let pieceClone = clone(piece);
         boardClone.movePiece(pieceClone, move.to.col, move.to.row);
-        let weight = LEVEL === levels.EASY ? 0 : move.weight;
-        let score = minimax(boardClone, depth - 1, alpha, beta, true) - weight;
+        let score = getScore(
+          boardClone,
+          minimax(boardClone, depth - 1, alpha, beta, true),
+          move,
+          false
+        );
         boardClone = null;
         bestScore = min(score, bestScore);
         beta = min(beta, score);

@@ -94,6 +94,13 @@ class Board {
   }
 
   /**
+   * Get the initial number of pieces on the board
+   */
+  getNumberOfInitialPieces() {
+    return (this._numCol / 2 - floor(this._numCol / 15) - 1) * this._numCol;
+  }
+
+  /**
    * Get the piece
    * @param {Number} col - The column to get the piece
    * @param {Number} row - The row to get the piece
