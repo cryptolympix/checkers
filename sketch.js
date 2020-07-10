@@ -1,6 +1,6 @@
-let CANVAS_DIM = 1200;
-
-if (window.innerWidth <= 1300) CANVAS_DIM = (9 * window.innerWidth) / 10;
+let CANVAS_DIM;
+if (window.innerWidth <= 800) CANVAS_DIM = (9 * window.innerWidth) / 10;
+else CANVAS_DIM = 800;
 
 let BOARD_COLUMN = 10;
 
