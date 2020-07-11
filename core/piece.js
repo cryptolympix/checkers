@@ -153,7 +153,7 @@ class Piece {
     }
 
     for (let d of directions) {
-      if (b.contains(col + d.col, row + d.row) && !b.hasPiece(col + t.col, row + t.row)) {
+      if (b.contains(col + d.col, row + d.row) && !b.hasPiece(col + d.col, row + d.row)) {
         let to = { col: col + d.col, row: row + d.row };
         // We add more weight to the move if this move allows the piece to become a king
         let weight = b.isKingRow(row + d.row, this._player) && !this._isKing ? 1 : 0;
