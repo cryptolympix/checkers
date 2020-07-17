@@ -25,7 +25,7 @@ function getNumberOfLostPieces(board, player) {
  * Get the score of a move
  * @param {Board} board - A clone board
  * @param {Number} minimaxScore - The recursive score of the algorithm
- * @param {Move} move - The player of the move
+ * @param {Move} move - The move to calculate the score
  * @param {Boolean} isMaximizingPlayer - Maximize or not the score
  */
 function getScore(board, minimaxScore, move, isMaximizingPlayer) {
@@ -80,7 +80,7 @@ function getBestMove() {
       boardClone.movePiece(piece, move.to.col, move.to.row);
       let score = getScore(
         boardClone,
-        minimax(boardClone, MINIMAX_MAX_DEPTH, -Infinity, Infinity, false),
+        alphabeta(boardClone, MINIMAX_MAX_DEPTH, -Infinity, Infinity, false),
         move,
         true
       );
@@ -102,11 +102,12 @@ function getBestMove() {
         boardClone.movePiece(pieceClone, move.to.col, move.to.row);
         let score = getScore(
           boardClone,
-          minimax(boardClone, MINIMAX_MAX_DEPTH, -Infinity, Infinity, false),
+          alphabeta(boardClone, MINIMAX_MAX_DEPTH, -Infinity, Infinity, false),
           move,
           true
         );
         boardClone = null;
+        pieceClone = null;
         if (score > bestScore) {
           bestMoves = [];
           bestScore = score;
@@ -130,7 +131,7 @@ function getBestMove() {
 /**
  * Alpha beta pruning algorithm
  */
-function minimax(board, depth, alpha, beta, isMaximizingPlayer) {
+function alphabeta(board, depth, alpha, beta, isMaximizingPlayer) {
   let result = checkWinner();
   if (depth === 0 || result) {
     if (result === players.HUMAN) return -100;
@@ -148,11 +149,12 @@ function minimax(board, depth, alpha, beta, isMaximizingPlayer) {
         boardClone.movePiece(pieceClone, move.to.col, move.to.row);
         let score = getScore(
           boardClone,
-          minimax(boardClone, depth - 1, alpha, beta, false),
+          alphabeta(boardClone, depth - 1, alpha, beta, false),
           move,
           true
         );
         boardClone = null;
+        pieceClone = null;
         bestScore = max(score, bestScore);
         alpha = max(alpha, score);
         if (beta <= alpha) break;
@@ -169,11 +171,12 @@ function minimax(board, depth, alpha, beta, isMaximizingPlayer) {
         boardClone.movePiece(pieceClone, move.to.col, move.to.row);
         let score = getScore(
           boardClone,
-          minimax(boardClone, depth - 1, alpha, beta, true),
+          alphabeta(boardClone, depth - 1, alpha, beta, true),
           move,
           false
         );
         boardClone = null;
+        pieceClone = null;
         bestScore = min(score, bestScore);
         beta = min(beta, score);
         if (beta <= alpha) break;
