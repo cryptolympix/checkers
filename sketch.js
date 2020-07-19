@@ -57,8 +57,8 @@ function setup() {
   levelButton.option(levels.HARD);
   levelButton.changed(onLevelChange);
   resetButton = createButton();
-  resetButton.mousePressed(() => reset());
 
+  initEventListeners();
   reset();
 }
 
@@ -69,6 +69,16 @@ function reset() {
   gameMsg = "It's your turn";
   gameMsgColor = HUMAN_COLOR;
   loop();
+}
+
+function initEventListeners() {
+  helperButton.mousePressed(() => helperButton.style('opacity', 0.7));
+  helperButton.mouseReleased(() => helperButton.style('opacity', 1));
+  resetButton.mousePressed(() => {
+    reset();
+    resetButton.style('opacity', 0.7);
+  });
+  resetButton.mouseReleased(() => resetButton.style('opacity', 1));
 }
 
 function draw() {
@@ -118,6 +128,12 @@ function drawButtons() {
   levelButton.class('button');
   resetButton.class('button');
 
+  // Cannot press button when the AI plays (search the best move to play)
+  if (currentPlayer === players.AI) {
+    helperButton.style('opacity', 0.6);
+    resetButton.style('opacity', 0.6);
+  }
+
   if (window.innerWidth <= 600) {
     let width = (4 * CANVAS_DIM) / 10;
     helperButton.size(width);
@@ -138,14 +154,11 @@ function drawButtons() {
 }
 
 function mouseReleased() {
-  if (
-    end ||
-    mouseX < 0 ||
-    mouseX > board.pixelDim ||
-    mouseY < 0 ||
-    mouseY > board.pixelDim
-  )
+  if (end) return;
+  if (mouseX < 0 || mouseX > board.pixelDim || mouseY < 0 || mouseY > board.pixelDim) {
+    if (pieceSelected) pieceSelected = null;
     return;
+  }
 
   /**
    * Find a mose specifying a destination
