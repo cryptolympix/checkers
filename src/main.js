@@ -1,8 +1,6 @@
 let CANVAS_DIM = 800;
 if (window.innerWidth <= 800) CANVAS_DIM = (9 * window.innerWidth) / 10;
 
-let BOARD_COLUMN = 10;
-
 let SHOW_MOVES = false;
 let SHOW_MOVES_WEIGHT = false;
 
@@ -10,6 +8,12 @@ let SHOW_MOVES_WEIGHT = false;
 let levels = { EASY: 'Easy', MEDIUM: 'Medium', HARD: 'Hard' };
 let LEVEL = levels.MEDIUM;
 let MINIMAX_MAX_DEPTH = 2;
+
+// Board
+let board;
+let BOARD_NUM_COL = 10;
+let BOARD_PXL_DIM = CANVAS_DIM;
+let BOARD_SQUARE_DIM = CANVAS_DIM / BOARD_NUM_COL;
 
 // Colors
 let AI_COLOR = '#DEB887';
@@ -29,17 +33,23 @@ let resetButton;
 // Assets
 let crownImg;
 
+// Messages
 let gameMsg;
 let gameMsgColor;
 
+// Gameplay
 let end;
-let board;
+let requiredMoves = [];
+
+// Player
 let players = { HUMAN: 'human', AI: 'ai' };
 let currentPlayer;
 
+// Piece
 let pieceSelected = null;
 let pieceInAnimation = null;
-let requiredMoves = [];
+
+// ================================================================= //
 
 function preload() {
   crownImg = loadImage('assets/crown.svg');
@@ -48,36 +58,38 @@ function preload() {
 function setup() {
   infoView = createDiv();
   createCanvas(CANVAS_DIM, CANVAS_DIM);
-
   helperButton = createButton();
-  helperButton.mousePressed(() => (SHOW_MOVES = !SHOW_MOVES));
   levelButton = createSelect();
+  resetButton = createButton();
+
   levelButton.option(levels.EASY);
   levelButton.option(levels.MEDIUM);
   levelButton.option(levels.HARD);
   levelButton.changed(onLevelChange);
-  resetButton = createButton();
 
   initEventListeners();
   reset();
 }
 
 function reset() {
-  board = new Board(CANVAS_DIM, BOARD_COLUMN);
+  loop();
+  board = initBoard(BOARD_NUM_COL);
   end = false;
   currentPlayer = players.HUMAN;
   gameMsg = "It's your turn";
   gameMsgColor = HUMAN_COLOR;
-  loop();
 }
 
 function initEventListeners() {
-  helperButton.mousePressed(() => helperButton.style('opacity', 0.7));
-  helperButton.mouseReleased(() => helperButton.style('opacity', 1));
+  helperButton.mousePressed(() => {
+    helperButton.style('opacity', 0.7);
+    SHOW_MOVES = !SHOW_MOVES;
+  });
   resetButton.mousePressed(() => {
     reset();
     resetButton.style('opacity', 0.7);
   });
+  helperButton.mouseReleased(() => helperButton.style('opacity', 1));
   resetButton.mouseReleased(() => resetButton.style('opacity', 1));
 }
 
@@ -85,7 +97,7 @@ function draw() {
   background(255);
 
   drawGameInfo();
-  board.draw();
+  drawBoard();
   drawButtons();
 
   if (end && !pieceInAnimation) {
@@ -107,11 +119,11 @@ function drawGameInfo() {
     `<div class="info-block">
       <div class="count-block">
         <span class="circle red"></span>
-        <p class="count">${board.getNumberOfPieces(players.HUMAN)}</p>
+        <p class="count">${getNumberOfPieces(players.HUMAN)}</p>
       </div>
       <div class="count-block">
         <span class="circle brown"></span>
-        <p class="count">${board.getNumberOfPieces(players.AI)}</p>
+        <p class="count">${getNumberOfPieces(players.AI)}</p>
       </div>
     </div>
     <div class="info-block">
@@ -127,12 +139,6 @@ function drawButtons() {
   helperButton.class('button');
   levelButton.class('button');
   resetButton.class('button');
-
-  // Cannot press button when the AI plays (search the best move to play)
-  if (currentPlayer === players.AI) {
-    helperButton.style('opacity', 0.6);
-    resetButton.style('opacity', 0.6);
-  }
 
   if (window.innerWidth <= 600) {
     let width = (4 * CANVAS_DIM) / 10;
@@ -155,7 +161,7 @@ function drawButtons() {
 
 function mouseReleased() {
   if (end) return;
-  if (mouseX < 0 || mouseX > board.pixelDim || mouseY < 0 || mouseY > board.pixelDim) {
+  if (mouseX < 0 || mouseX > BOARD_PXL_DIM || mouseY < 0 || mouseY > BOARD_PXL_DIM) {
     if (pieceSelected) pieceSelected = null;
     return;
   }
@@ -164,7 +170,7 @@ function mouseReleased() {
    * Find a mose specifying a destination
    * @param {Number} toCol - The column of the destination
    * @param {Number} toRow - The row of the destination
-   * @param {Number} moves - An array of moves
+   * @param {Array<Move>} moves - An array of moves
    */
   function findMove(toCol, toRow, moves) {
     for (let move of moves) {
@@ -179,10 +185,10 @@ function mouseReleased() {
    */
   function getJumpingMoves() {
     let result = [];
-    for (let piece of board.getAllPieces(players.HUMAN)) {
-      let moves = piece.getAvailableMoves();
+    for (let piece of getAllPieces(players.HUMAN)) {
+      let moves = getAvailableMoves(piece);
       for (let move of moves) {
-        if (move.isJumpingMove()) result.push(move);
+        if (isJumpingMove(move)) result.push(move);
       }
     }
     return result;
@@ -196,22 +202,23 @@ function mouseReleased() {
   }
 
   if (currentPlayer === players.HUMAN) {
-    let i = floor(mouseX / board.squareDim);
-    let j = floor(mouseY / board.squareDim);
+    let i = floor(mouseX / BOARD_SQUARE_DIM);
+    let j = floor(mouseY / BOARD_SQUARE_DIM);
 
     requiredMoves = [];
 
-    if (board.hasPiece(i, j)) {
+    if (board[i][j]) {
       // If we don't have selected a piece to move
       if (!pieceSelected) {
-        if (board.getPiece(i, j).player === players.HUMAN)
-          pieceSelected = board.getPiece(i, j);
+        if (board[i][j].player === players.HUMAN) {
+          pieceSelected = board[i][j];
+        }
       }
       // If we change the selected piece to move
       else {
-        let piece = board.getPiece(i, j);
+        let piece = board[i][j];
         if (piece.player === players.HUMAN) {
-          pieceSelected = board.getPiece(i, j);
+          pieceSelected = board[i][j];
         } else {
           pieceSelected = null;
         }
@@ -219,7 +226,7 @@ function mouseReleased() {
     }
     // If we have selected a piece and press on a free case
     else if (pieceSelected) {
-      let moves = pieceSelected.getAvailableMoves();
+      let moves = getAvailableMoves(pieceSelected);
       let wishedMove = findMove(i, j, moves);
 
       if (!wishedMove) {
@@ -227,8 +234,8 @@ function mouseReleased() {
         return;
       }
 
-      if (wishedMove.isJumpingMove()) {
-        board.movePiece(pieceSelected, i, j);
+      if (isJumpingMove(wishedMove)) {
+        movePiece(pieceSelected, wishedMove);
         pieceSelected = null;
         let result = checkWinner();
         if (result) {
@@ -243,12 +250,12 @@ function mouseReleased() {
         if (canPlayJumpingMove()) {
           // Add the jumping moves to the required moves
           for (let move of getJumpingMoves()) {
-            if (move.isJumpingMove()) {
+            if (isJumpingMove(move)) {
               requiredMoves.push(move);
             }
           }
         } else {
-          board.movePiece(pieceSelected, i, j);
+          movePiece(pieceSelected, wishedMove);
           pieceSelected = null;
           let result = checkWinner();
           if (result) {
@@ -270,9 +277,9 @@ function AI() {
    */
   function hasAvailableMove(player) {
     let total = 0;
-    let pieces = board.getAllPieces(player);
+    let pieces = getAllPieces(player);
     for (let piece of pieces) {
-      total += piece.getAvailableMoves().length;
+      total += getAvailableMoves(piece).length;
     }
     return total > 0;
   }
@@ -280,8 +287,8 @@ function AI() {
   if (currentPlayer === players.AI) {
     if (hasAvailableMove(players.AI)) {
       let bestMove = getBestMove();
-      let pieceToMove = board.getPiece(bestMove.from.col, bestMove.from.row);
-      board.movePiece(pieceToMove, bestMove.to.col, bestMove.to.row);
+      let pieceToMove = board[bestMove.from.col][bestMove.from.row];
+      movePiece(pieceToMove, bestMove);
       let result = checkWinner();
       if (result) {
         currentPlayer = null;
@@ -312,13 +319,13 @@ function AI() {
 function checkWinner() {
   let winner = null;
 
-  if (board.getNumberOfPieces(players.AI) === 0) {
+  if (getNumberOfPieces(players.AI) === 0) {
     winner = players.HUMAN;
     gameMsg = 'Congratulation !';
     gameMsgColor = 'green';
   }
 
-  if (board.getNumberOfPieces(players.HUMAN) === 0) {
+  if (getNumberOfPieces(players.HUMAN) === 0) {
     winner = players.AI;
     gameMsg = 'AI is too strong for you...';
     gameMsgColor = 'firebrick';

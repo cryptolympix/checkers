@@ -17,8 +17,8 @@ function clone(obj) {
  * @param {String} player - A player to get the number
  */
 function getNumberOfLostPieces(board, player) {
-  let numberOfInitialPiece = board.getNumberOfInitialPieces() / 2;
-  return numberOfInitialPiece - board.getNumberOfPieces(player);
+  let numberOfInitialPiece = getNumberOfInitialPieces() / 2;
+  return numberOfInitialPiece - getNumberOfPieces(player, board);
 }
 
 /**
@@ -51,8 +51,9 @@ function getScore(board, minimaxScore, move, isMaximizingPlayer) {
 
 /**
  * Get the best move for the AI, depending of the game level selected
+ * @param {Number} depth - The depth of the minimax tree
  */
-function getBestMove() {
+function getBestMove(depth = MINIMAX_MAX_DEPTH) {
   let bestMoves = [];
   let bestScore = -Infinity;
 
@@ -61,26 +62,23 @@ function getBestMove() {
    */
   function getJumpingMoves() {
     let result = [];
-    for (let piece of board.getAllPieces(players.AI)) {
-      let moves = piece.getAvailableMoves();
+    for (let piece of getAllPieces(players.AI)) {
+      let moves = getAvailableMoves(piece);
       for (let move of moves) {
-        if (move.isJumpingMove()) result.push(move);
+        if (isJumpingMove(move)) result.push(move);
       }
     }
     return result;
   }
 
-  let jumpingMoves = getJumpingMoves();
-
-  // If the AI can play a jumping move, he must play it
-  if (jumpingMoves.length > 0) {
-    for (let move of jumpingMoves) {
+  function searchMove(moves) {
+    for (let move of moves) {
       let boardClone = clone(board);
-      let piece = boardClone.getPiece(move.from.col, move.from.row);
-      boardClone.movePiece(piece, move.to.col, move.to.row);
+      let piece = boardClone[move.from.col][move.from.row];
+      movePiece(piece, move, boardClone);
       let score = getScore(
         boardClone,
-        alphabeta(boardClone, MINIMAX_MAX_DEPTH, -Infinity, Infinity, false),
+        alphabeta(boardClone, depth, -Infinity, Infinity, false),
         move,
         true
       );
@@ -93,29 +91,17 @@ function getBestMove() {
         bestMoves.push(move);
       }
     }
+  }
+
+  let jumpingMoves = getJumpingMoves();
+
+  // If the AI can play a jumping move, he must play it
+  if (jumpingMoves.length > 0) {
+    searchMove(jumpingMoves);
   } else {
-    let aiPieces = board.getAllPieces(players.AI);
+    let aiPieces = getAllPieces(players.AI);
     for (let piece of aiPieces) {
-      for (let move of piece.getAvailableMoves()) {
-        let boardClone = clone(board);
-        let pieceClone = clone(piece);
-        boardClone.movePiece(pieceClone, move.to.col, move.to.row);
-        let score = getScore(
-          boardClone,
-          alphabeta(boardClone, MINIMAX_MAX_DEPTH, -Infinity, Infinity, false),
-          move,
-          true
-        );
-        boardClone = null;
-        pieceClone = null;
-        if (score > bestScore) {
-          bestMoves = [];
-          bestScore = score;
-        }
-        if (score === bestScore) {
-          bestMoves.push(move);
-        }
-      }
+      searchMove(getAvailableMoves(piece));
     }
   }
 
@@ -136,17 +122,17 @@ function alphabeta(board, depth, alpha, beta, isMaximizingPlayer) {
   if (depth === 0 || result) {
     if (result === players.HUMAN) return -100;
     if (result === players.AI) return 100;
-    return board.getNumberOfPieces(players.AI) - board.getNumberOfPieces(players.HUMAN);
+    return getNumberOfPieces(players.AI, board) - getNumberOfPieces(players.HUMAN, board);
   }
 
   if (isMaximizingPlayer) {
     let bestScore = -Infinity;
-    let aiPieces = board.getAllPieces(players.AI);
+    let aiPieces = getAllPieces(players.AI, board);
     for (let piece of aiPieces) {
-      for (let move of piece.getAvailableMoves(board)) {
+      for (let move of getAvailableMoves(piece, board)) {
         let boardClone = clone(board);
         let pieceClone = clone(piece);
-        boardClone.movePiece(pieceClone, move.to.col, move.to.row);
+        movePiece(pieceClone, move, boardClone);
         let score = getScore(
           boardClone,
           alphabeta(boardClone, depth - 1, alpha, beta, false),
@@ -163,12 +149,12 @@ function alphabeta(board, depth, alpha, beta, isMaximizingPlayer) {
     return bestScore;
   } else {
     let bestScore = Infinity;
-    let humanPieces = board.getAllPieces(players.HUMAN);
+    let humanPieces = getAllPieces(players.HUMAN, board);
     for (let piece of humanPieces) {
-      for (let move of piece.getAvailableMoves(board)) {
+      for (let move of getAvailableMoves(piece, board)) {
         let boardClone = clone(board);
         let pieceClone = clone(piece);
-        boardClone.movePiece(pieceClone, move.to.col, move.to.row);
+        movePiece(pieceClone, move, boardClone);
         let score = getScore(
           boardClone,
           alphabeta(boardClone, depth - 1, alpha, beta, true),
