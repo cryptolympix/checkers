@@ -28,8 +28,8 @@ function isJumpingMove(move) {
  */
 function isRequiredMove(move) {
   let {
-    from: { fromCol, fromRow },
-    row: { toCol, toRow },
+    from: { col: fromCol, row: fromRow },
+    row: { col: toCol, row: toRow },
   } = move;
   for (let move of requiredMoves) {
     if (

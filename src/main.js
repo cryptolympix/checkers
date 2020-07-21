@@ -167,7 +167,7 @@ function mouseReleased() {
   }
 
   /**
-   * Find a mose specifying a destination
+   * Find a mose by specifying a destination
    * @param {Number} toCol - The column of the destination
    * @param {Number} toRow - The row of the destination
    * @param {Array<Move>} moves - An array of moves
