@@ -21,24 +21,3 @@ function Move(from, to, weight, jumpedPiece, prevMove) {
 function isJumpingMove(move) {
   return move.jumpedPiece !== null && move.weight > 0;
 }
-
-/**
- * Return true if the move is required
- * @param {Move} move
- */
-function isRequiredMove(move) {
-  let {
-    from: { col: fromCol, row: fromRow },
-    row: { col: toCol, row: toRow },
-  } = move;
-  for (let move of requiredMoves) {
-    if (
-      move.from.col === fromCol &&
-      move.from.row === fromRow &&
-      move.to.col === toCol &&
-      move.to.row === toRow
-    )
-      return true;
-  }
-  return false;
-}
