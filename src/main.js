@@ -72,12 +72,12 @@ function setup() {
 }
 
 function reset() {
-  loop();
   board = initBoard(BOARD_NUM_COL);
   end = false;
   currentPlayer = players.HUMAN;
   gameMsg = "It's your turn";
   gameMsgColor = HUMAN_COLOR;
+  loop();
 }
 
 function initEventListeners() {
