@@ -6,4 +6,4 @@ The french variant of the checkers game developped with [p5.js](https://p5js.org
 
 ## Demo
 
-https://mxjoly.github.io/checkers/
+https://cryptolympix.github.io/checkers/
